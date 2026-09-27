@@ -24,7 +24,11 @@ def env(name):
 
 def token():
     client_id = env("GOOGLE_CLIENT_ID")
-    print("Client ID format:", client_id.endswith(".apps.googleusercontent.com"))
+    print("Client ID length:", len(client_id))
+    print("Client ID contains googleusercontent:",
+          "googleusercontent.com" in client_id)
+    print("Client ID has quotes:",
+          '"' in client_id or "'" in client_id)
     response = requests.post("https://oauth2.googleapis.com/token", data={
         "client_id": env("GOOGLE_CLIENT_ID"),
         "client_secret": env("GOOGLE_CLIENT_SECRET"),
