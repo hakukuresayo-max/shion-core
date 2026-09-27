@@ -1,0 +1,39 @@
+
+name: SHION CORE scheduled research
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Test without saving to Drive'
+        type: boolean
+        default: true
+  schedule:
+    - cron: '0 0 * * *'  # Around 09:00 JST; GitHub may delay scheduled runs.
+permissions:
+  contents: read
+concurrency:
+  group: shion-core-drive-memory
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      OPENAI_API_KEY: $<escape>{{</escape> secrets.OPENAI_API_KEY <escape>}}</escape>
+      GOOGLE_CLIENT_ID: $<escape>{{</escape> secrets.GOOGLE_CLIENT_ID <escape>}}</escape>
+      GOOGLE_CLIENT_SECRET: $<escape>{{</escape> secrets.GOOGLE_CLIENT_SECRET <escape>}}</escape>
+      GOOGLE_REFRESH_TOKEN: $<escape>{{</escape> secrets.GOOGLE_REFRESH_TOKEN <escape>}}</escape>
+      SHION_TOPIC: $<escape>{{</escape> vars.SHION_TOPIC <escape>}}</escape>
+      OPENAI_MODEL: gpt-5-mini
+      DRY_RUN: $<escape>{{</escape> github.event_name == 'workflow_dispatch' && inputs.dry_run || false <escape>}}</escape>
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: agent/requirements.txt
+      - run: pip install -r agent/requirements.txt
+      - name: Research and save memory
+        run: python agent/run.py
+      # Backups can contain private memory. Do NOT upload as a workflow artifact on a public repository.
